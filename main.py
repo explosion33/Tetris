@@ -46,6 +46,17 @@ class Block (object):
         surface.set_colorkey(colorNew)
         return surface
     
+    def getAbsPos(self, grid):
+        pos = []
+        for y in range(self.size[1]):
+            for x in range(self.size[0]):
+                if self.data[y][x] == 1:
+                    x1 = self.pos[0] + x
+                    y1 = self.pos[1] + y
+                    pos.append((x1,y1))
+                else:
+                    pos.append(None)
+        return pos
 
 def find_data_file(filename):
     """
@@ -89,6 +100,18 @@ pygame.init()
 
 size = (900,900)
 gridW = 50
+
+grid = []
+w = int(size[0]/gridW)
+h = int(size[1]/gridW)
+
+for y in range(h):
+    temp = []
+    for x in range(w):
+        temp.append(0)
+    grid.append(temp)
+    temp = []
+
 
 # makes two Surfaces one as the screen the other as a mimic screen
 # this is useful for post-process scaling
@@ -154,6 +177,13 @@ while True:
         if block.pos[1] + block.size[1] < size[1]/gridW:
             block.pos[1] += 1
         else:
+            positions = block.getAbsPos(grid)
+
+            for pos in positions:
+                if pos:
+                    grid[pos[1]][pos[0]] = 1
+
+            print(grid)
             blocks.append([b,block.pos])
             data = [[1]]
             pos = [randint(0, size[1]/gridW - len(data[0])), 0-len(data)]
