@@ -8,14 +8,18 @@ from random import randint
 class Block (object):
     """
     Block (data,color,pos): handles block graphics and position\n
-    data  : a 2D aray with 1's & 0's (1=block)\n
+    data  : a 2D aray with 1's & 0's (1=block) or "random" for random generation\n
     color : (r,g,b)\n
     pos   : [x,y] where to render the block (from top left)\n
     """
     def __init__(self,data, color, pos):
-        self.data = data
         self.color = color
         self.pos = pos
+
+        if data == "random":
+            self.data = self.randomData()
+        else:
+            self.data = data
     
     def draw(self, gridSize, borderLen):
         """
@@ -57,6 +61,21 @@ class Block (object):
                 else:
                     pos.append(None)
         return pos
+
+    def randomData(self):
+        datas = [
+            [[1,1,1,1]],
+            [[1,0,0],[1,1,1]],
+            [[0,0,1],[1,1,1]],
+            [[1,1],[1,1]],
+            [[0,1,1],[1,1,0]],
+            [[0,1,0],[1,1,1]],
+            [[1,1,0],[0,1,1]],
+        ] #all posible cominations
+
+        x = len(datas)
+        x = randint(0,x-1)
+        return datas[x]
 
 def find_data_file(filename):
     """
@@ -133,6 +152,7 @@ blocks = [] #list of "placed blocks"
 #timers for controled movement
 lastTime = 0  #user Controls
 lastTime2 = 0 #down
+gTime = 500
 
 display.fill((0,255,0))
 while True:
@@ -168,24 +188,54 @@ while True:
                 block.pos[0] += 1
 
         if "s" in keys:
-            if block.pos[1] + block.size[1] < size[1]/gridW:
-                block.pos[1] += 1
+            gTime = 100
+        else:
+            gTime = 500
 
     #Gravity
-    if pygame.time.get_ticks() - lastTime2 > 500:
+    if pygame.time.get_ticks() - lastTime2 > gTime:
         lastTime2 = pygame.time.get_ticks()
         if block.pos[1] + block.size[1] < size[1]/gridW:
-            block.pos[1] += 1
-        else:
+            positions = block.getAbsPos(grid)
+            touch = False
+            for pos in positions:
+                if pos:
+                    dwn = (pos[0], pos[1] + 1)
+                    try:
+                        print(dwn, grid[dwn[1]][dwn[0]])
+                        if grid[dwn[1]][dwn[0]] == 1:
+                            if dwn[0] >= 0 and dwn[1] >= 0:
+                                touch = True
+                    except:
+                        print(dwn, "ERR")
+            if not touch:
+                block.pos[1] += 1
+            else:
+                positions = block.getAbsPos(grid)
+
+                for pos in positions:
+                    if pos:
+                        grid[pos[1]][pos[0]] = 1
+
+                blocks.append([b,block.pos])
+                data = "random"
+                block = Block(data, (200,200,200), [0,0])
+                data = block.data
+                pos = [randint(0, size[1]/gridW - len(data[0])), 0-len(data)]
+                block.pos = pos
+                print(blocks)
+
+        else: #touching bottom
             positions = block.getAbsPos(grid)
 
             for pos in positions:
                 if pos:
                     grid[pos[1]][pos[0]] = 1
 
-            print(grid)
             blocks.append([b,block.pos])
-            data = [[1]]
+            data = "random"
+            block = Block(data, (200,200,200), [0,0])
+            data = block.data
             pos = [randint(0, size[1]/gridW - len(data[0])), 0-len(data)]
-            block = Block(data, (200,200,200), pos)
-    
+            block.pos = pos
+            print(blocks)
