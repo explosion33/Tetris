@@ -114,6 +114,24 @@ def getKeys():
         return out
     return []
 
+def placeBlocks(block):
+    global grid
+    global blocks
+
+    positions = block.getAbsPos(grid)
+
+    for pos in positions:
+        if pos:
+            grid[pos[1]][pos[0]] = 1
+
+    blocks.append([b,block.pos])
+    data = "random"
+    block = Block(data, (200,200,200), [0,0])
+    data = block.data
+    pos = [randint(0, size[1]/gridW - len(data[0])), 0-len(data)]
+    block.pos = pos
+    return block
+
 
 pygame.init()
 
@@ -181,11 +199,31 @@ while True:
             lastTime = pygame.time.get_ticks()
         if "a" in keys:
             if block.pos[0] != 0:
+                positions = block.getAbsPos(grid)
+                rouch = False
+                for pos in positions:
+                    if pos:
+                        x,y = pos
+                        x -= 1
+                        if grid[y][x] == 1:
+                            touch = True
+
+                if not touch:
                     block.pos[0] -= 1
 
         elif "d" in keys:
             if block.pos[0] + block.size[0] != size[0]/gridW:
-                block.pos[0] += 1
+                positions = block.getAbsPos(grid)
+                rouch = False
+                for pos in positions:
+                    if pos:
+                        x,y = pos
+                        x += 1
+                        if grid[y][x] == 1:
+                            touch = True
+
+                if not touch:
+                    block.pos[0] += 1
 
         if "s" in keys:
             gTime = 100
@@ -211,31 +249,8 @@ while True:
             if not touch:
                 block.pos[1] += 1
             else:
-                positions = block.getAbsPos(grid)
-
-                for pos in positions:
-                    if pos:
-                        grid[pos[1]][pos[0]] = 1
-
-                blocks.append([b,block.pos])
-                data = "random"
-                block = Block(data, (200,200,200), [0,0])
-                data = block.data
-                pos = [randint(0, size[1]/gridW - len(data[0])), 0-len(data)]
-                block.pos = pos
-                print(blocks)
+                block = placeBlocks(block)
 
         else: #touching bottom
-            positions = block.getAbsPos(grid)
-
-            for pos in positions:
-                if pos:
-                    grid[pos[1]][pos[0]] = 1
-
-            blocks.append([b,block.pos])
-            data = "random"
-            block = Block(data, (200,200,200), [0,0])
-            data = block.data
-            pos = [randint(0, size[1]/gridW - len(data[0])), 0-len(data)]
-            block.pos = pos
+            block = placeBlocks(block)
             print(blocks)
