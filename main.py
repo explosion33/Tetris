@@ -51,6 +51,10 @@ class Block (object):
         return surface
     
     def getAbsPos(self, grid):
+        """
+        getAbsPos (grid): returns the position of each individual block in a Block on the grid\n
+        grid : grid data ex| 18x18 full of zeros
+        """
         pos = []
         for y in range(self.size[1]):
             for x in range(self.size[0]):
@@ -115,8 +119,14 @@ def getKeys():
     return []
 
 def placeBlocks(block):
+    """
+    placeBlocks (block): places block on the screen, removes player control from the block and stores its collision data\n
+    block : a Block object\n
+    returns: a new block for the player to control
+    """
     global grid
     global blocks
+    global gridW
 
     positions = block.getAbsPos(grid)
 
@@ -124,12 +134,25 @@ def placeBlocks(block):
         if pos:
             grid[pos[1]][pos[0]] = 1
 
-    blocks.append([b,block.pos])
+    data = block.data
+    pos = block.pos
+    for y in range(len(data)):
+        for x in range(len(data[0])):
+            if data[y][x] == 1:
+                x1,y1 = pos
+                x1 += x
+                y1 += y
+                b = Block([[1]], (200,200,200), [x1,y1])
+
+                blocks.append([b.draw(gridW, 2),b.pos])
+
+
     data = "random"
     block = Block(data, (200,200,200), [0,0])
     data = block.data
     pos = [randint(0, size[1]/gridW - len(data[0])), 0-len(data)]
     block.pos = pos
+    print(blocks)
     return block
 
 
@@ -253,4 +276,3 @@ while True:
 
         else: #touching bottom
             block = placeBlocks(block)
-            print(blocks)
