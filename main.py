@@ -81,6 +81,73 @@ class Block (object):
         x = randint(0,x-1)
         return datas[x]
 
+    def rotate(self, grid):
+        w,h = self.size
+
+        newData = []        
+        for x in range(w):
+            t = []
+            for y in range(h):
+                t.append(self.data[y][x])
+            t = t[::-1]
+            newData.append(t)
+        data = self.data
+        self.data = newData
+        self.size = (h,w)
+
+        x1,y1 = self.pos
+        x = w-h
+        if x != 0:
+            k = x 
+            if k < 0: k = k*-1
+
+            n = int(x/k)
+            self.pos = [self.pos[0] + n, self.pos[1]]
+
+        badPosition = False
+        positions = self.getAbsPos(grid)
+        for pos in positions:
+            if pos:
+                x,y = pos
+                try:
+                    if grid[y][x] == 1:
+                        badPosition = True
+                except:
+                    badPosition = True
+
+        if badPosition:
+            print("BAD POS")
+            self.data = data
+            self.size = (w,h)
+            self.pos = [x1,y1]
+
+    def floor(self, grid):
+
+        x,y = self.pos
+        touch = False
+        while not touch:
+            if self.pos[1] + self.size[1] < len(grid):
+                positions = self.getAbsPos(grid)
+                for pos in positions:
+                    if pos:
+                        dwn = (pos[0], pos[1] + 1)
+                        try:
+                            if grid[dwn[1]][dwn[0]] == 1:
+                                if dwn[0] >= 0 and dwn[1] >= 0:
+                                    touch = True
+                        except:
+                            pass
+
+            else: #touching bottom
+                touch = True
+            self.pos[1] += 1
+        self.pos[1] -= 1
+            
+
+            
+
+
+
 def find_data_file(filename):
     """
     find_data_file (filename) : Finds the absolute position of a file for when the game is compiled into an exe
@@ -150,16 +217,15 @@ def placeBlocks(block):
     data = "random"
     block = Block(data, (200,200,200), [0,0])
     data = block.data
-    pos = [randint(0, size[1]/gridW - len(data[0])), 0-len(data)]
+    pos = [randint(0, size[0]/gridW - len(data[0])), 0-len(data)]
     block.pos = pos
-    print(blocks)
     return block
 
 
 pygame.init()
 
-size = (900,900)
-gridW = 50
+size = (300,720)
+gridW = 30
 
 grid = []
 w = int(size[0]/gridW)
@@ -186,7 +252,7 @@ pygame.display.set_caption('Tetris')
 
 #creates the first block
 data = [[1,0],[1,1]]
-pos = [randint(0, size[1]/gridW - len(data[0])), 0-len(data)]
+pos = [randint(0, size[0]/gridW - len(data[0])), 0-len(data)]
 block = Block(data, (200,200,200), pos)
 blocks = [] #list of "placed blocks"
 
@@ -194,6 +260,8 @@ blocks = [] #list of "placed blocks"
 lastTime = 0  #user Controls
 lastTime2 = 0 #down
 gTime = 500
+
+pushedKeys = []
 
 display.fill((0,255,0))
 while True:
@@ -203,12 +271,12 @@ while True:
 
     #draws active block
     b = block.draw(gridW, 2)
-    display.blit(b, (block.pos[0]*50, block.pos[1]*50))
+    display.blit(b, (block.pos[0]*gridW, block.pos[1]*gridW))
 
     #draws inactive blocks
     for i in blocks:
         k = i[1]
-        display.blit(i[0],(k[0]*50,k[1]*50))
+        display.blit(i[0],(k[0]*gridW,k[1]*gridW))
 
     #refreshes the screen
     screen.blit(display, (0,0))
@@ -217,7 +285,7 @@ while True:
 
     #user input
     keys = getKeys()
-    if pygame.time.get_ticks() - lastTime > 200:
+    if pygame.time.get_ticks() - lastTime > 150: #timer based
         if keys:
             lastTime = pygame.time.get_ticks()
         if "a" in keys:
@@ -253,6 +321,21 @@ while True:
         else:
             gTime = 500
 
+    #one input for key push
+    if "r" in keys:
+        if "r" not in pushedKeys:
+            block.rotate(grid)
+            pushedKeys.append("r")
+    
+    if "space" in keys:
+        if "space" not in pushedKeys:
+            block.floor(grid)
+            pushedKeys.append("space")
+
+    for key in pushedKeys:
+        if key not in keys:
+            pushedKeys.remove(key)
+
     #Gravity
     if pygame.time.get_ticks() - lastTime2 > gTime:
         lastTime2 = pygame.time.get_ticks()
@@ -263,12 +346,11 @@ while True:
                 if pos:
                     dwn = (pos[0], pos[1] + 1)
                     try:
-                        print(dwn, grid[dwn[1]][dwn[0]])
                         if grid[dwn[1]][dwn[0]] == 1:
                             if dwn[0] >= 0 and dwn[1] >= 0:
                                 touch = True
                     except:
-                        print(dwn, "ERR")
+                        pass
             if not touch:
                 block.pos[1] += 1
             else:
