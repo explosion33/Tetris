@@ -109,10 +109,13 @@ class Block (object):
         for pos in positions:
             if pos:
                 x,y = pos
+                print(pos)
                 try:
                     if grid[y][x] == 1:
                         badPosition = True
                 except:
+                    badPosition = True
+                if x < 0:
                     badPosition = True
 
         if badPosition:
@@ -201,19 +204,6 @@ def placeBlocks(block):
         if pos:
             grid[pos[1]][pos[0]] = 1
 
-    data = block.data
-    pos = block.pos
-    for y in range(len(data)):
-        for x in range(len(data[0])):
-            if data[y][x] == 1:
-                x1,y1 = pos
-                x1 += x
-                y1 += y
-                b = Block([[1]], (200,200,200), [x1,y1])
-
-                blocks.append([b.draw(gridW, 2),b.pos])
-
-
     data = "random"
     block = Block(data, (200,200,200), [0,0])
     data = block.data
@@ -274,9 +264,13 @@ while True:
     display.blit(b, (block.pos[0]*gridW, block.pos[1]*gridW))
 
     #draws inactive blocks
-    for i in blocks:
-        k = i[1]
-        display.blit(i[0],(k[0]*gridW,k[1]*gridW))
+    for y in range(len(grid)):
+        for x in range(len(grid[0])):
+            if grid[y][x] == 1:
+                b = Block([[1]], (200,200,200), [x,y])
+                w,h = b.pos
+                display.blit(b.draw(gridW, 2), (w*gridW,h*gridW))
+
 
     #refreshes the screen
     screen.blit(display, (0,0))
@@ -358,3 +352,29 @@ while True:
 
         else: #touching bottom
             block = placeBlocks(block)
+
+    #Tetris Detection
+    Tetri = []
+    for y in range(len(grid)):
+        all1 = True
+        for x in range(len(grid[0])):
+            if grid[y][x] == 0:
+                all1 = False
+        if all1:
+            Tetri.append(y)
+
+    for t in Tetri:
+        for b in blocks:
+            if b.pos[1] == t:
+                blocks.remove(b)
+
+        x = grid.pop(t)
+        grid = grid[::-1]
+
+        ls = []
+        for i in range(len(x)):
+            ls.append(0)
+        print(ls)
+
+        grid.append(ls)
+        grid = grid[::-1]
