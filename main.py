@@ -281,7 +281,7 @@ while True:
 
     #RIGHT SIDE OF SCREEN
 
-    f = pygame.font.SysFont("", 32, True)
+    f = pygame.font.SysFont("", 60, True)
     sc = f.render(str(score), True, (22,22,22))
     w = sc.get_width()
 
