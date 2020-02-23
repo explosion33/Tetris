@@ -109,7 +109,6 @@ class Block (object):
         for pos in positions:
             if pos:
                 x,y = pos
-                print(pos)
                 try:
                     if grid[y][x] == 1:
                         badPosition = True
@@ -119,7 +118,6 @@ class Block (object):
                     badPosition = True
 
         if badPosition:
-            print("BAD POS")
             self.data = data
             self.size = (w,h)
             self.pos = [x1,y1]
@@ -146,9 +144,6 @@ class Block (object):
             self.pos[1] += 1
         self.pos[1] -= 1
             
-
-            
-
 
 
 def find_data_file(filename):
@@ -190,19 +185,25 @@ def getKeys():
 
 def placeBlocks(block):
     """
-    placeBlocks (block): places block on the screen, removes player control from the block and stores its collision data\n
+    placeBlocks (block): places block on the screen, removes player control from the block and stores its collision data (updates score too)\n
     block : a Block object\n
     returns: a new block for the player to control
     """
     global grid
-    global blocks
     global gridW
+    global hard
+    global score
 
     positions = block.getAbsPos(grid)
 
     for pos in positions:
         if pos:
             grid[pos[1]][pos[0]] = 1
+
+    if hard:
+        score += len(block.data)*2
+    else:
+        score += len(block.data)
 
     data = "random"
     block = Block(data, (200,200,200), [0,0])
@@ -216,6 +217,7 @@ pygame.init()
 
 size = (300,720)
 gridW = 30
+panelSize = 300
 
 grid = []
 w = int(size[0]/gridW)
@@ -231,10 +233,10 @@ for y in range(h):
 
 # makes two Surfaces one as the screen the other as a mimic screen
 # this is useful for post-process scaling
-screen = pygame.display.set_mode(size)
-display = screen
-display.fill((0,255,0))
-screen.fill((255,255,255))
+screen = pygame.display.set_mode((size[0] + panelSize,720))
+display = pygame.Surface(size)
+display.fill((22,22,22))
+screen.fill((222,222,222))
 screen.blit(display,(0,0))
 pygame.display.flip()
 
@@ -251,13 +253,19 @@ lastTime = 0  #user Controls
 lastTime2 = 0 #down
 gTime = 500
 
+#keeps tracks of whoch keys were pushed in order to implemet one action for push
 pushedKeys = []
 
-display.fill((0,255,0))
+#scoring
+hard = False    #wether or not a block was hard dropped
+score = 0
+
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             sys.exit()
+
+    #LEFT SIDE OF SCREEN
 
     #draws active block
     b = block.draw(gridW, 2)
@@ -271,11 +279,23 @@ while True:
                 w,h = b.pos
                 display.blit(b.draw(gridW, 2), (w*gridW,h*gridW))
 
+    #RIGHT SIDE OF SCREEN
+
+    f = pygame.font.SysFont("", 32, True)
+    sc = f.render(str(score), True, (22,22,22))
+    w = sc.get_width()
+
+    screen.blit(sc, (size[0] + panelSize/2 -w/2, 20))
+
+
+
+
 
     #refreshes the screen
     screen.blit(display, (0,0))
     pygame.display.flip()
-    display.fill((0,255,0))
+    display.fill((22,22,22))
+    screen.fill((222,222,222))
 
     #user input
     keys = getKeys()
@@ -325,6 +345,7 @@ while True:
         if "space" not in pushedKeys:
             block.floor(grid)
             pushedKeys.append("space")
+            hard = True
 
     for key in pushedKeys:
         if key not in keys:
@@ -353,17 +374,17 @@ while True:
         else: #touching bottom
             block = placeBlocks(block)
 
-    #Tetris Detection
-    Tetri = []
+    #row clear Detection
+    row = []
     for y in range(len(grid)):
         all1 = True
         for x in range(len(grid[0])):
             if grid[y][x] == 0:
                 all1 = False
         if all1:
-            Tetri.append(y)
+            row.append(y)
 
-    for t in Tetri:
+    for t in row:
         for b in blocks:
             if b.pos[1] == t:
                 blocks.remove(b)
@@ -374,7 +395,19 @@ while True:
         ls = []
         for i in range(len(x)):
             ls.append(0)
-        print(ls)
 
         grid.append(ls)
         grid = grid[::-1]
+
+    #add score for row clear
+    m = len(row)
+    if m == 1:
+        m = 40
+    elif m == 2:
+        m = 100
+    elif m == 3:
+        m = 300
+    elif m == 4:
+        m = 1200
+    score += m
+    print(score)
