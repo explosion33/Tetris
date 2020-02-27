@@ -99,10 +99,15 @@ class Block (object):
         x = w-h
         if x != 0:
             k = x 
+            p=x
             if k < 0: k = k*-1
+        
+            u=0
+            if x == 3: u = 1
+            elif x == -3: u = -1
 
             n = int(x/k)
-            self.pos = [self.pos[0] + n, self.pos[1]]
+            self.pos = [self.pos[0] + n, self.pos[1] + u]
 
         badPosition = False
         positions = self.getAbsPos(grid)
@@ -200,6 +205,9 @@ def placeBlocks(block):
         if pos:
             grid[pos[1]][pos[0]] = 1
 
+            if pos[1] <= 0:
+                loose()
+
     if hard:
         score += len(block.data)*2
     else:
@@ -211,6 +219,30 @@ def placeBlocks(block):
     pos = [randint(0, size[0]/gridW - len(data[0])), 0-len(data)]
     block.pos = pos
     return block
+
+def loose():
+    global grid
+    global block
+    global score
+
+    grid = []
+    w = int(size[0]/gridW)
+    h = int(size[1]/gridW)
+
+    for y in range(h):
+        temp = []
+        for x in range(w):
+            temp.append(0)
+        grid.append(temp)
+        temp = []
+    
+    data = "random"
+    block = Block(data, (200,200,200), [0,0])
+    data = block.data
+    pos = [randint(0, size[0]/gridW - len(data[0])), 0-len(data)]
+    block.pos = pos
+
+    score = 0
 
 
 pygame.init()
@@ -243,10 +275,11 @@ pygame.display.flip()
 pygame.display.set_caption('Tetris')
 
 #creates the first block
-data = [[1,0],[1,1]]
+data = "random"
+block = Block(data, (200,200,200), [0,0])
+data = block.data
 pos = [randint(0, size[0]/gridW - len(data[0])), 0-len(data)]
-block = Block(data, (200,200,200), pos)
-blocks = [] #list of "placed blocks"
+block.pos = pos
 
 #timers for controled movement
 lastTime = 0  #user Controls
@@ -385,9 +418,6 @@ while True:
             row.append(y)
 
     for t in row:
-        for b in blocks:
-            if b.pos[1] == t:
-                blocks.remove(b)
 
         x = grid.pop(t)
         grid = grid[::-1]
