@@ -148,8 +148,6 @@ class Block (object):
                 touch = True
             self.pos[1] += 1
         self.pos[1] -= 1
-            
-
 
 def find_data_file(filename):
     """
@@ -188,7 +186,7 @@ def getKeys():
         return out
     return []
 
-def placeBlocks(block):
+def placeBlocks(block, NextBlock):
     """
     placeBlocks (block): places block on the screen, removes player control from the block and stores its collision data (updates score too)\n
     block : a Block object\n
@@ -218,7 +216,7 @@ def placeBlocks(block):
     data = block.data
     pos = [randint(0, size[0]/gridW - len(data[0])), 0-len(data)]
     block.pos = pos
-    return block
+    return NextBlock, block
 
 def loose():
     global grid
@@ -287,6 +285,12 @@ data = block.data
 pos = [randint(0, size[0]/gridW - len(data[0])), 0-len(data)]
 block.pos = pos
 
+data = "random"
+nextBlock = Block(data, (200,200,200), [0,0])
+data = nextBlock.data
+pos = [randint(0, size[0]/gridW - len(data[0])), 0-len(data)]
+nextBlock.pos = pos
+
 #timers for controled movement
 lastTime = 0  #user Controls
 lastTime2 = 0 #down
@@ -298,6 +302,9 @@ pushedKeys = []
 #scoring
 hard = False    #wether or not a block was hard dropped
 score = 0
+
+b1 = "b.png"
+b2 = "b.png"
 
 f = open(find_data_file("hs.txt"), "r")
 highScore = int(f.read())
@@ -334,6 +341,24 @@ while True:
 
     screen.blit(sc, (size[0] + panelSize/2 -w/2, 20))
     screen.blit(Highsc, (size[0] + panelSize/2 -w2/2, size[1]-20-h2))
+
+    f = pygame.font.SysFont("", 40, True)
+
+    btn1 = pygame.image.load(find_data_file(b1))
+    btn1T = f.render("RESTART", True, (222,222,222))
+    btn1.blit(btn1T, (btn1.get_width()/2 - btn1T.get_width()/2, btn1.get_height()/2 - btn1T.get_height()/2))
+    screen.blit(btn1, (size[0] + panelSize/2 -btn1.get_width()/2, 400))
+
+    if pygame.mouse.get_pressed()[0]:
+        if btn1.get_rect(topleft=(size[0] + panelSize/2 -btn1.get_width()/2, 300)).collidepoint(pygame.mouse.get_pos()):
+            b1 = "bP.png"
+            loose()
+    else:
+        b1 = "b.png"
+        b2 = "b.png"
+
+    nb = nextBlock.draw(gridW, 2)
+    screen.blit(nb, (size[0] + panelSize/2 -nb.get_width()/2, 200))
 
 
 
@@ -417,10 +442,10 @@ while True:
             if not touch:
                 block.pos[1] += 1
             else:
-                block = placeBlocks(block)
+                block, nextBlock = placeBlocks(block, nextBlock)
 
         else: #touching bottom
-            block = placeBlocks(block)
+            block, nextBlock = placeBlocks(block, nextBlock)
 
     #row clear Detection
     row = []
