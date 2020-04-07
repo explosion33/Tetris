@@ -224,6 +224,7 @@ def loose():
     global grid
     global block
     global score
+    global highScore
 
     grid = []
     w = int(size[0]/gridW)
@@ -242,6 +243,11 @@ def loose():
     pos = [randint(0, size[0]/gridW - len(data[0])), 0-len(data)]
     block.pos = pos
 
+    if score > highScore:
+        highScore = score
+        f = open(find_data_file("hs.txt"), "w")
+        f.write(str(highScore))
+    print("score", score)
     score = 0
 
 
@@ -293,6 +299,10 @@ pushedKeys = []
 hard = False    #wether or not a block was hard dropped
 score = 0
 
+f = open(find_data_file("hs.txt"), "r")
+highScore = int(f.read())
+f.close()
+
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -318,7 +328,12 @@ while True:
     sc = f.render(str(score), True, (22,22,22))
     w = sc.get_width()
 
+    Highsc = f.render(str(highScore), True, (22,22,22))
+    w2 = Highsc.get_width()
+    h2 = Highsc.get_height()
+
     screen.blit(sc, (size[0] + panelSize/2 -w/2, 20))
+    screen.blit(Highsc, (size[0] + panelSize/2 -w2/2, size[1]-20-h2))
 
 
 
