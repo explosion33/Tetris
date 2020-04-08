@@ -223,6 +223,8 @@ def loose():
     global block
     global score
     global highScore
+    global numLines
+    global speedMult
 
     grid = []
     w = int(size[0]/gridW)
@@ -247,6 +249,8 @@ def loose():
         f.write(str(highScore))
     print("score", score)
     score = 0
+    numLines = 0
+    speedMult = 1
 
 
 pygame.init()
@@ -296,6 +300,8 @@ lastTime = 0  #user Controls
 lastTime2 = 0 #down
 gTime = 500
 
+speedMult = 1
+
 #keeps tracks of whoch keys were pushed in order to implemet one action for push
 pushedKeys = []
 
@@ -303,12 +309,16 @@ pushedKeys = []
 hard = False    #wether or not a block was hard dropped
 score = 0
 
-b1 = "b.png"
-b2 = "b.png"
-
 f = open(find_data_file("hs.txt"), "r")
 highScore = int(f.read())
 f.close()
+
+numLines = 0
+
+b1 = "b.png"
+b2 = "b.png"
+
+
 
 while True:
     for event in pygame.event.get():
@@ -350,7 +360,7 @@ while True:
     screen.blit(btn1, (size[0] + panelSize/2 -btn1.get_width()/2, 400))
 
     if pygame.mouse.get_pressed()[0]:
-        if btn1.get_rect(topleft=(size[0] + panelSize/2 -btn1.get_width()/2, 300)).collidepoint(pygame.mouse.get_pos()):
+        if btn1.get_rect(topleft=(size[0] + panelSize/2 -btn1.get_width()/2, 400)).collidepoint(pygame.mouse.get_pos()):
             b1 = "bP.png"
             loose()
     else:
@@ -404,9 +414,9 @@ while True:
                     block.pos[0] += 1
 
         if "s" in keys:
-            gTime = 100
+            gTime = 100/speedMult
         else:
-            gTime = 500
+            gTime = 500/speedMult
 
     #one input for key push
     if "r" in keys:
@@ -425,7 +435,7 @@ while True:
             pushedKeys.remove(key)
 
     #Gravity
-    if pygame.time.get_ticks() - lastTime2 > gTime:
+    if pygame.time.get_ticks() - lastTime2 > gTime/speedMult:
         lastTime2 = pygame.time.get_ticks()
         if block.pos[1] + block.size[1] < size[1]/gridW:
             positions = block.getAbsPos(grid)
@@ -471,6 +481,7 @@ while True:
 
     #add score for row clear
     m = len(row)
+    numLines += m
     if m == 1:
         m = 40
     elif m == 2:
@@ -480,4 +491,8 @@ while True:
     elif m == 4:
         m = 1200
     score += m
-    print(score)
+    print(numLines, speedMult)
+
+    if numLines > 0:
+        x = int((numLines - 10)/20)/10
+        speedMult = x +1
