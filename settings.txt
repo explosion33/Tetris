@@ -1,0 +1,1 @@
+{'left': 'a', 'right': 'd', 'speed': 's', 'drop': 'space', 'rotate': 'r', 'grid': 0}
